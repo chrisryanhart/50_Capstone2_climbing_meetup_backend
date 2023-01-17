@@ -16,9 +16,8 @@ const app = express();
 app.use(cors());
 // parse json
 app.use(express.json());
-// tiny not used
+
 app.use(morgan("tiny"));
-// parse form data
 
 app.use(authenticateJWT);
 
