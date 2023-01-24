@@ -10,6 +10,20 @@ const editProfileFormSchema = require('../schemas/editProfileFormSchema.json');
 
 const router = new express.Router();
 
+
+router.delete('/:id/delete', ensureLoggedIn, async function(req,res,next){
+    try{
+        let id =req.params.id;
+
+        let result = await User.deleteUser(id);
+
+        return res.json("Deleted user");
+    }catch(err){
+        return next(err);
+    }
+});
+
+
 // return list of all users
 // may need to filter by criteria
 router.get('/',ensureLoggedIn, async function(req,res,next){
@@ -50,8 +64,15 @@ router.get('/:id/meetups',ensureLoggedIn,async function(req,res,next){
 
 // update user profile
 // ensure current user matches
-router.patch('/:id',ensureLoggedIn,async function (req,res,next){
+router.patch('/:id/edit',ensureLoggedIn,async function (req,res,next){
     try{
+        let ageType = Number(req.body.user_age);
+        if(Object.is(ageType,NaN)){
+            let invalidInputError = new BadRequestError('Age must be an integer');
+            return next(invalidInputError)
+        }
+        req.body.user_age = Number(req.body.user_age);
+        
         const verifiedEditProfileData = jsonschema.validate(req.body,editProfileFormSchema);
 
         if(!verifiedEditProfileData.valid){
@@ -62,17 +83,19 @@ router.patch('/:id',ensureLoggedIn,async function (req,res,next){
 
         let user_id=Number(req.params.id);
         // confirm current user is the one changing the profile
-        if(user_id !== req.user.id){
+        if(user_id !== Number(req.user.id)){
             throw new UnauthorizedError("Unauthorized");
         } 
         
         const result = await User.updateUser(user_id,req.body)
     
-        return res.json(result);
+        return res.json(result.id);
     }catch(err){
         return next(err);
     }
 
 });
+
+
 
 module.exports = router;

@@ -72,8 +72,15 @@ router.post('/new',ensureLoggedIn, async function(req,res,next){
 
 // edit existing meetup
 // ensures user editing the meetup was the creator
-router.patch('/:id',ensureLoggedIn, async function(req,res,next){
+router.patch('/:id/edit',ensureLoggedIn, async function(req,res,next){
     try{
+        let durationType = Number(req.body.duration);
+        if(Object.is(durationType,NaN)){
+            let invalidInputError = new BadRequestError('Duration must be at least 1');
+            return next(invalidInputError)
+        }
+        req.body.duration = Number(req.body.duration);
+        
         const verifiedEditMeetupData = jsonschema.validate(req.body,editMeetupFormSchema);
 
         if(!verifiedEditMeetupData.valid){
@@ -95,7 +102,7 @@ router.patch('/:id',ensureLoggedIn, async function(req,res,next){
 
 // delete meetup
 // ensures logged in user created the meetup they're deleting 
-router.delete('/:id',ensureLoggedIn, async function(req,res,next){
+router.delete('/:id/delete',ensureLoggedIn, async function(req,res,next){
     try{
         const id = req.params.id;
         const attendee_user_id = req.user.id;
@@ -103,7 +110,7 @@ router.delete('/:id',ensureLoggedIn, async function(req,res,next){
         await Meetup.deleteMeetup(id,attendee_user_id);
         // if(result) return res.json;
     
-        return res.json({message: "Meetup deleted"});
+        return res.json("Meetup deleted");
     }catch(err){
         return next(err);
     }
